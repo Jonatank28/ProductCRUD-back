@@ -1,13 +1,15 @@
 const express = require('express');
+const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const db = new PrismaClient();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 //Create
 app.post('/create', async (req, res) => {
-  const data = req.body;
+  const { data } = req.body;
   try {
     if (!data.title) {
       return res.status(400).json({ message: "O título é obrigatório!" });
@@ -82,6 +84,30 @@ app.delete("/delete/:id", async (req, res) => {
 app.get("/findAll", async (req, res) => {
   try {
     const product = await db.product.findMany()
+    res.status(200).json(product)
+  } catch (err) {
+    res.status(400).json({ mesage: "Dados não encontrados" })
+  }
+})
+
+// FindOne
+app.get("/findOne/:id", async (req, res) => {
+  const { id } = req.params
+  try {
+    const verifyExistProduct = await db.product.findFirst({
+      where: {
+        id: Number(id)
+      }
+    })
+    if (!verifyExistProduct) {
+      return res.status(404).json({ message: "Produto não encontrado" })
+    }
+
+    const product = await db.product.findFirst({
+      where: {
+        id: Number(id)
+      }
+    })
     res.status(200).json(product)
   } catch (err) {
     res.status(400).json({ mesage: "Dados não encontrados" })
